@@ -1,0 +1,18 @@
+version: '3'
+services:
+  identity_db:
+    image: postgres:11
+    ports:
+      - "6008:5432"
+    environment:
+      POSTGRES_PASSWORD: max123456
+  data_db:
+    image: postgres:11
+    ports:
+      - "6009:5432"
+    environment:
+      POSTGRES_PASSWORD: max123456
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
