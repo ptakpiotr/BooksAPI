@@ -6,6 +6,6 @@ namespace WebAPI.Data
     public interface IRefitClient
     {
         [Get("/api/generate.json?key={key}&schema=Books&count={max}")]
-        Task<List<BookAddDTO>> GetBooks(string key,int max);
+        Task<List<BookModel>> GetBooks(string key,int max);
     }
 }
