@@ -11,7 +11,7 @@ namespace WebAPI.Profiles
             CreateMap<LoginModel, IdentityUser>();
 
             CreateMap<BookAddDTO, BookModel>().ReverseMap();
-            CreateMap<CountryAddDTO, CountryModel>();
+            CreateMap<CountryAddDTO, CountryModel>().ReverseMap();
 
             CreateMap<BookModel, BookReadDTO>();
             CreateMap<CountryModel, CountryReadDTO>();

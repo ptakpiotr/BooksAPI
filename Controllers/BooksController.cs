@@ -26,8 +26,9 @@ namespace WebAPI.Controllers
         public IActionResult GetAllBooks()
         {
             List<BookModel> books = _repo.GetAllBooks();
+            List<BookReadDTO> output = _mapper.Map<List<BookReadDTO>>(books);
 
-            return Ok(books);
+            return Ok(output);
         }
 
         [AllowAnonymous]
@@ -40,8 +41,9 @@ namespace WebAPI.Controllers
             {
                 return NotFound();
             }
+            BookReadDTO output = _mapper.Map<BookReadDTO>(book);
 
-            return Ok(book);
+            return Ok(output);
         }
 
         [HttpPost]
