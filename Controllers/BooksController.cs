@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,6 +7,7 @@ namespace WebAPI.Controllers
 {
     [ApiController]
     [Route("/api/[controller]")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public class BooksController : ControllerBase
     {
         private readonly ILogger<BooksController> _logger;
@@ -19,6 +21,7 @@ namespace WebAPI.Controllers
             _mapper = mapper;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult GetAllBooks()
         {
@@ -27,6 +30,7 @@ namespace WebAPI.Controllers
             return Ok(books);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}", Name = "GetOneBook")]
         public IActionResult GetOneBook(Guid id)
         {
@@ -59,7 +63,7 @@ namespace WebAPI.Controllers
         public IActionResult DeleteBook(Guid id)
         {
             BookModel bm = _repo.GetOneBook(id);
-
+            
             if(bm is null)
             {
                 return NotFound();

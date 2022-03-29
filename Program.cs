@@ -1,11 +1,17 @@
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Serialization;
+using Npgsql;
 using Refit;
 using Serilog;
 using StackExchange.Redis;
+using System.Text;
 using WebAPI.Jobs;
 using WebAPI.Polly;
 
@@ -30,11 +36,26 @@ services.AddDbContext<DataDbContext>(opts =>
     opts.UseNpgsql(Configuration.GetConnectionString("DataConn"));
 });
 
+services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opts =>
+{
+    opts.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+    {
+        ValidIssuer = Configuration["Jwt:ValidIssuer"],
+        ValidAudience = Configuration["Jwt:ValidAudience"],
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("Jwt:Key").Value))
+    };
+});
+
 services.AddRefitClient<IRefitClient>().ConfigureHttpClient((opts) =>{
     opts.BaseAddress = new Uri("https://api.mockaroo.com");
 });
-
-services.AddControllers();
+services.AddControllers().AddNewtonsoftJson((opts) =>
+{
+    opts.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
@@ -49,7 +70,6 @@ services.AddStackExchangeRedisCache(opts =>
         rpc.ConstDelayRetry.Execute(() =>
         {
             opts.Configuration = Configuration.GetConnectionString("RedisConn");
-
         });
     }
     catch (RedisConnectionException ex)
@@ -60,7 +80,16 @@ services.AddStackExchangeRedisCache(opts =>
 
 services.AddHangfire(opts =>
 {
-    opts.UsePostgreSqlStorage(Configuration.GetConnectionString("HangConn"));
+    RedisRetryPolicies rpc = new();
+    try
+    {
+        rpc.ExpDelayHangRetry.Execute(() => {
+            opts.UsePostgreSqlStorage(Configuration.GetConnectionString("HangConn"));
+        });
+    }catch(NpgsqlException ex)
+    {
+
+    }
 });
 
 services.AddScoped<IBookRepo, EfBookRepo>();
@@ -83,6 +112,7 @@ app.UseHttpsRedirection();
 app.UseHangfireServer();
 app.UseSerilogRequestLogging();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseRecurringJobs();

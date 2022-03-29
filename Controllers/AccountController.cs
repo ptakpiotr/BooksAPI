@@ -2,6 +2,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace WebAPI.Controllers
 {
@@ -14,15 +18,17 @@ namespace WebAPI.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMapper _mapper;
         private readonly IEmailSender _sender;
+        private readonly IConfiguration _configuration;
 
         public AccountController(ILogger<AccountController> logger, UserManager<IdentityUser> userManager,
-            RoleManager<IdentityRole> roleManager, IMapper mapper, IEmailSender sender)
+            RoleManager<IdentityRole> roleManager, IMapper mapper, IEmailSender sender,IConfiguration configuration)
         {
             _logger = logger;
             _userManager = userManager;
             _roleManager = roleManager;
             _mapper = mapper;
             _sender = sender;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -31,7 +37,7 @@ namespace WebAPI.Controllers
             if (ModelState.IsValid)
             {
                 IdentityUser user = _mapper.Map<IdentityUser>(rm);
-
+                user.UserName = rm.Email;
                 IdentityResult res = await _userManager.CreateAsync(user, rm.Password);
 
                 if (res.Succeeded)
@@ -74,9 +80,34 @@ namespace WebAPI.Controllers
                     return NotFound();
                 }
 
-                //get jwt token
+                var userRoles = await _userManager.GetRolesAsync(user);
+                var newClaims = new List<Claim>() { new Claim(ClaimTypes.Name,user.UserName),
+                    new Claim(JwtRegisteredClaimNames.Jti,user.SecurityStamp) };
 
-                //<<--JWT-->>
+                List<Claim> allClaims = new();
+                allClaims.AddRange(newClaims);
+
+                foreach (var role in userRoles)
+                {
+                    allClaims.Add(new Claim(ClaimTypes.Role, role));
+                }
+
+                SymmetricSecurityKey authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+                JwtSecurityToken token = new JwtSecurityToken(
+                    issuer: _configuration["Jwt:ValidIssuer"],
+                    audience: _configuration["Jwt:ValidAudience"],
+                    expires: DateTime.Now.AddHours(3),
+                    claims: allClaims,
+                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+
+                string writtenToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+                return Ok(new
+                {
+                    Token = writtenToken
+                });
+
             }
 
             return BadRequest();
