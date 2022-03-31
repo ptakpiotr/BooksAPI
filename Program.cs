@@ -1,6 +1,5 @@
 using Hangfire;
 using Hangfire.PostgreSql;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -49,7 +48,8 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     };
 });
 
-services.AddRefitClient<IRefitClient>().ConfigureHttpClient((opts) =>{
+services.AddRefitClient<IRefitClient>().ConfigureHttpClient((opts) =>
+{
     opts.BaseAddress = new Uri("https://api.mockaroo.com");
 });
 services.AddControllers().AddNewtonsoftJson((opts) =>
@@ -83,16 +83,19 @@ services.AddHangfire(opts =>
     RedisRetryPolicies rpc = new();
     try
     {
-        rpc.ExpDelayHangRetry.Execute(() => {
+        rpc.ExpDelayHangRetry.Execute(() =>
+        {
             opts.UsePostgreSqlStorage(Configuration.GetConnectionString("HangConn"));
         });
-    }catch(NpgsqlException ex)
+    }
+    catch (NpgsqlException ex)
     {
 
     }
 });
 
 services.AddScoped<IBookRepo, EfBookRepo>();
+services.AddScoped<ICountryRepo, EfCountryRepo>();
 services.AddScoped<IRecurringJobs, RecurringJobs>();
 services.AddScoped<IEmailSender, FluentEmailSender>();
 

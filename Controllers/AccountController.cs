@@ -21,7 +21,7 @@ namespace WebAPI.Controllers
         private readonly IConfiguration _configuration;
 
         public AccountController(ILogger<AccountController> logger, UserManager<IdentityUser> userManager,
-            RoleManager<IdentityRole> roleManager, IMapper mapper, IEmailSender sender,IConfiguration configuration)
+            RoleManager<IdentityRole> roleManager, IMapper mapper, IEmailSender sender, IConfiguration configuration)
         {
             _logger = logger;
             _userManager = userManager;
@@ -75,7 +75,7 @@ namespace WebAPI.Controllers
             {
                 IdentityUser user = await _userManager.FindByEmailAsync(lm.Email);
 
-                if(user is null)
+                if (user is null)
                 {
                     return NotFound();
                 }
@@ -114,16 +114,16 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet("confirmemail")]
-        public async Task<IActionResult> ConfirmEmail(string email,string token)
+        public async Task<IActionResult> ConfirmEmail(string email, string token)
         {
-            if(string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
             {
                 return BadRequest();
             }
 
             IdentityUser user = await _userManager.FindByEmailAsync(email);
 
-            if(user is null)
+            if (user is null)
             {
                 return NotFound();
             }
@@ -145,7 +145,7 @@ namespace WebAPI.Controllers
         {
             IdentityUser user = await _userManager.FindByIdAsync(id);
 
-            if(user is null)
+            if (user is null)
             {
                 return NotFound();
             }
@@ -162,7 +162,7 @@ namespace WebAPI.Controllers
             {
                 IdentityUser user = await _userManager.FindByEmailAsync(fpm.Email);
 
-                if(user is null)
+                if (user is null)
                 {
                     return NotFound();
                 }
@@ -182,7 +182,7 @@ namespace WebAPI.Controllers
             {
                 IdentityUser user = await _userManager.FindByEmailAsync(rpm.Email);
 
-                if(user is null)
+                if (user is null)
                 {
                     return NotFound();
                 }
