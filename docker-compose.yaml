@@ -5,13 +5,13 @@ services:
     ports:
       - "6008:5432"
     environment:
-      POSTGRES_PASSWORD: max123456
+      POSTGRES_PASSWORD: 
   data_db:
     image: postgres:11
     ports:
       - "6009:5432"
     environment:
-      POSTGRES_PASSWORD: max123456
+      POSTGRES_PASSWORD: 
   redis:
     image: redis:alpine
     ports:
